@@ -47,6 +47,7 @@ import org.hibernate.search.annotations.Analyze;
 import org.hibernate.search.annotations.Norms;
 import org.hibernate.search.engine.impl.AnnotationProcessingHelper;
 import org.hibernate.search.engine.impl.LuceneOptionsImpl;
+import org.hibernate.search.engine.spi.AbstractDocumentBuilder.PropertiesMetadata.Container;
 import org.hibernate.search.spi.InstanceInitializer;
 import org.hibernate.search.util.impl.ReflectionHelper;
 import org.hibernate.search.util.logging.impl.Log;
@@ -493,6 +494,9 @@ public class DocumentBuilderIndexedEntity<T> extends AbstractDocumentBuilder<T> 
 			if ( previousMember != member ) {
 				currentFieldValue = ReflectionHelper.getMemberValue( unproxiedInstance, member );
 				previousMember = member;
+				if (member.isCollection()) {
+					Collection collection = objectInitializer.initializeCollection( (Collection) currentFieldValue );
+				}
 			}
 
 			final FieldBridge fieldBridge = propertiesMetadata.fieldBridges.get( i );
