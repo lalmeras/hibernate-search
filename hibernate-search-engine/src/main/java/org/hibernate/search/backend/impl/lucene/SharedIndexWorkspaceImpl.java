@@ -32,13 +32,14 @@ public class SharedIndexWorkspaceImpl extends AbstractWorkspaceImpl {
 
 	private final Object lock = new Object();
 	private int openWriterUsers = 0;
+	private boolean lastExitCloses = false;
 
 	public SharedIndexWorkspaceImpl(DirectoryBasedIndexManager indexManager, ErrorHandler errorHandler) {
 		super( indexManager, errorHandler );
 	}
 
 	@Override
-	public void afterTransactionApplied(boolean someFailureHappened) {
+	public void afterTransactionApplied(boolean someFailureHappened, boolean streaming) {
 		synchronized ( lock ) {
 			openWriterUsers--;
 			if ( openWriterUsers == 0 ) {
@@ -46,11 +47,14 @@ public class SharedIndexWorkspaceImpl extends AbstractWorkspaceImpl {
 					writerHolder.forceLockRelease();
 				}
 				else {
-					writerHolder.closeIndexWriter();
+					if ( ! streaming || lastExitCloses ) {
+						lastExitCloses = false;
+						writerHolder.closeIndexWriter();
+					}
 				}
 			}
 			else {
-				if ( ! someFailureHappened ) {
+				if ( ! someFailureHappened && ! streaming ) {
 					writerHolder.commitIndexWriter();
 				}
 			}
@@ -69,6 +73,19 @@ public class SharedIndexWorkspaceImpl extends AbstractWorkspaceImpl {
 		synchronized ( lock ) {
 			openWriterUsers++;
 			return super.getIndexWriter( errorContextBuilder );
+		}
+	}
+
+	@Override
+	public void flush() {
+		synchronized ( lock ) {
+			if ( openWriterUsers == 0 ) {
+				writerHolder.closeIndexWriter();
+			}
+			else {
+				lastExitCloses = true;
+				writerHolder.commitIndexWriter();
+			}
 		}
 	}
 

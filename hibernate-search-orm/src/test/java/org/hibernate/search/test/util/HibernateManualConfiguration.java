@@ -1,6 +1,8 @@
 /* 
+ * Hibernate, Relational Persistence for Idiomatic Java
+ * 
  * JBoss, Home of Professional Open Source
- * Copyright 2011 Red Hat Inc. and/or its affiliates and other contributors
+ * Copyright 2012 Red Hat Inc. and/or its affiliates and other contributors
  * as indicated by the @authors tag. All rights reserved.
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
@@ -16,29 +18,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
+package org.hibernate.search.test.util;
 
-package org.hibernate.search.infinispan;
-
-import java.util.UUID;
+import org.hibernate.search.cfg.spi.SearchConfiguration;
+import org.hibernate.search.engine.impl.HibernateStatelessInitializer;
 
 /**
- * Infinispan might cluster automatically with other tests being run at the same time
- * performing network autodiscovery, we make sure that won't happen isolating
- * each VM running tests by using a different UUID channel name. 
- * 
- * @author Sanne Grinovero <sanne@hibernate.org> (C) 2011 Red Hat Inc.
+ * @author Sanne Grinovero <sanne@hibernate.org> (C) 2012 Red Hat Inc.
  */
-public class TestableJGroupsTransport extends org.infinispan.remoting.transport.jgroups.JGroupsTransport {
-	
-	/**
-	 * Name of the JGroups channel used in test
-	 */
-	public static final String CHANNEL_NAME = UUID.randomUUID().toString();
+public class HibernateManualConfiguration extends ManualConfiguration implements SearchConfiguration {
 
-	protected void startJGroupsChannelIfNeeded() {
-		System.out.println( "Overriding configured JGroups channel name to " + CHANNEL_NAME );
-		configuration.setClusterName( CHANNEL_NAME );
-		super.startJGroupsChannelIfNeeded();
+	public HibernateManualConfiguration() {
+		super( HibernateStatelessInitializer.INSTANCE );
 	}
 
 }

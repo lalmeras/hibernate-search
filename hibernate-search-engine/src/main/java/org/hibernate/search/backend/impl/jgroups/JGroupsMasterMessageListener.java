@@ -23,6 +23,8 @@
  */
 package org.hibernate.search.backend.impl.jgroups;
 
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
 
 import org.jgroups.Address;
@@ -59,12 +61,13 @@ public class JGroupsMasterMessageListener implements Receiver {
 	}
 
 	@SuppressWarnings("unchecked")
+	@Override
 	public void receive(Message message) {
 		final List<LuceneWork> queue;
 		final String indexName;
 		final IndexManager indexManager;
 		try {
-			BackendMessage decoded = ( BackendMessage ) message.getObject();
+			BackendMessage decoded = (BackendMessage) message.getObject();
 			indexName = decoded.indexName;
 			indexManager = searchFactory.getAllIndexesManager().getIndexManager( indexName );
 			if ( indexManager != null ) {
@@ -87,9 +90,9 @@ public class JGroupsMasterMessageListener implements Receiver {
 		if ( queue != null && !queue.isEmpty() ) {
 			if ( log.isDebugEnabled() ) {
 				log.debugf(
-					"There are %d Lucene docs received from slave node %s to be processed by master",
-					queue.size(),
-					message.getSrc()
+						"There are %d Lucene docs received from slave node %s to be processed by master",
+						queue.size(),
+						message.getSrc()
 				);
 			}
 			perform( indexName, queue );
@@ -109,23 +112,30 @@ public class JGroupsMasterMessageListener implements Receiver {
 	// Implementations of JGroups interfaces
 	// ------------------------------------------------------------------------------------------------------------------
 
-	public byte[] getState() {
-		return null;
-	}
-
-	public void setState(byte[] state) {
-		//no-op
-	}
-
+	@Override
 	public void viewAccepted(View view) {
 		log.jGroupsReceivedNewClusterView( view );
 	}
 
+	@Override
 	public void suspect(Address suspected_mbr) {
 		//no-op
 	}
 
+	@Override
 	public void block() {
 		//no-op
+	}
+
+	@Override
+	public void getState(OutputStream arg0) throws Exception {
+	}
+
+	@Override
+	public void setState(InputStream arg0) throws Exception {
+	}
+
+	@Override
+	public void unblock() {
 	}
 }

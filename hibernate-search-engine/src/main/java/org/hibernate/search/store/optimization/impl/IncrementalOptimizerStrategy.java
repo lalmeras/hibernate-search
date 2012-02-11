@@ -82,15 +82,20 @@ public class IncrementalOptimizerStrategy extends ExplicitOnlyOptimizerStrategy 
 			log.debugv( "Optimize {0} after {1} operations and {2} transactions",
 						indexName, operations, transactions );
 			IndexWriter writer = workspace.getIndexWriter();
-			performOptimization( writer );
+			try {
+				performOptimization( writer );
+			}
+			finally {
+				workspace.afterTransactionApplied( false, false );
+			}
 		}
 	}
 
 	@Override
 	public void initialize(IndexManager indexManager, Properties indexProperties) {
 		super.initialize( indexManager, indexProperties );
-		operationMax = ConfigurationParseHelper.getIntValue( indexProperties, "optimizer.operation_limit.max", -1 );
-		transactionMax = ConfigurationParseHelper.getIntValue( indexProperties, "optimizer.transaction_limit.max", -1 );
+		operationMax = ConfigurationParseHelper.getIntValue( indexProperties, "operation_limit.max", -1 );
+		transactionMax = ConfigurationParseHelper.getIntValue( indexProperties, "transaction_limit.max", -1 );
 	}
 
 	public long getOptimizationsPerformed() {

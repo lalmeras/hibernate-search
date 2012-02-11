@@ -70,21 +70,13 @@ public class NRTWorkspaceImpl extends AbstractWorkspaceImpl implements Directory
 	}
 
 	@Override
-	public void afterTransactionApplied(boolean someFailureHappened) {
+	public void afterTransactionApplied(boolean someFailureHappened, boolean streaming) {
 		if ( someFailureHappened ) {
 			writerHolder.forceLockRelease();
 		}
 		else {
-			IndexReader newIndexReader = writerHolder.openNRTIndexReader( true );
-			writeLock.lock();
-			IndexReader oldReader = currentReferenceReader;
-			currentReferenceReader = newIndexReader;
-			writeLock.unlock();
-			try {
-				oldReader.close();
-			}
-			catch ( IOException e ) {
-				log.unableToCLoseLuceneIndexReader( e );
+			if ( ! streaming ) {
+				flush();
 			}
 		}
 	}
@@ -165,6 +157,21 @@ public class NRTWorkspaceImpl extends AbstractWorkspaceImpl implements Directory
 		}
 		finally {
 			writeLock.unlock();
+		}
+	}
+
+	@Override
+	public void flush() {
+		IndexReader newIndexReader = writerHolder.openNRTIndexReader( true );
+		writeLock.lock();
+		IndexReader oldReader = currentReferenceReader;
+		currentReferenceReader = newIndexReader;
+		writeLock.unlock();
+		try {
+			oldReader.close();
+		}
+		catch ( IOException e ) {
+			log.unableToCLoseLuceneIndexReader( e );
 		}
 	}
 

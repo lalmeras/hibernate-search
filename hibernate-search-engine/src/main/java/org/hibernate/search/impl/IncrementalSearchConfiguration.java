@@ -43,20 +43,21 @@ import org.hibernate.search.spi.internals.SearchFactoryState;
  * @author Emmanuel Bernard
  */
 public class IncrementalSearchConfiguration implements SearchConfiguration {
-	private final ReflectionManager reflectionManager = new JavaReflectionManager();
 	private final List<Class<?>> classes;
 	private final Map<String, Class<?>> classesByName = new HashMap<String, Class<?>>();
-	private final SearchFactoryState cfg;
-	private Properties properties;
+	private final SearchFactoryState state;
+	private final Properties properties;
+	private final ReflectionManager reflectionManager = new JavaReflectionManager();
 
 	public IncrementalSearchConfiguration(List<Class<?>> classes, Properties properties, SearchFactoryState factoryState) {
 		this.properties = properties;
 		this.classes = classes;
-		this.cfg = factoryState;
+		this.state = factoryState;
 		for ( Class<?> entity : classes ) {
 			classesByName.put( entity.getName(), entity );
 		}
 	}
+
 	public Iterator<Class<?>> getClassMappings() {
 		return classes.iterator();
 	}
@@ -78,7 +79,7 @@ public class IncrementalSearchConfiguration implements SearchConfiguration {
 	}
 
 	public SearchMapping getProgrammaticMapping() {
-		return null;
+		return state.getProgrammaticMapping();
 	}
 
 	public Map<Class<? extends ServiceProvider<?>>, Object> getProvidedServices() {
@@ -87,11 +88,11 @@ public class IncrementalSearchConfiguration implements SearchConfiguration {
 
 	@Override
 	public boolean isTransactionManagerExpected() {
-		return cfg.isTransactionManagerExpected();
+		return state.isTransactionManagerExpected();
 	}
 
 	@Override
 	public InstanceInitializer getInstanceInitializer() {
-		return cfg.getInstanceInitializer();
+		return state.getInstanceInitializer();
 	}
 }
